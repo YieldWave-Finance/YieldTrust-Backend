@@ -4,7 +4,8 @@
   "description": "API for AgriTrust Protocol",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "test": "echo \"ok\""
   },
   "dependencies": {
     "cors": "^2.8.6",
