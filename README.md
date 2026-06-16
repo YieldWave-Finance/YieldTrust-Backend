@@ -30,5 +30,12 @@ npm install
 npm start
 ```
 
+## API Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/` | Project info |
+| GET | `/health` | Liveness/readiness probe — returns `{ status: 'ok', uptime: <seconds> }` |
+
 ## 🤝 Contributing
 Contributions are highly welcome. Please ensure your commits are cryptographically signed using GPG or SSH keys. For major structural changes, please open an issue first to discuss your proposal.
