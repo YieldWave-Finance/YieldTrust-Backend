@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "test": "echo \"ok\""
+    "test": "node --test"
   },
   "dependencies": {
     "cors": "^2.8.6",
