@@ -178,6 +178,38 @@ Create a new dispute case.
 5. **HTTPS:** Use HTTPS in production environments
 6. **Contract Verification:** Always verify smart contract addresses before processing transactions
 
+## 🔄 Continuous Integration
+
+The repository uses **GitHub Actions** to enforce code quality on every push and pull request targeting `main`.
+
+### Workflow: `YieldTrust Backend CI`
+
+| Step | Command | Purpose |
+|---|---|---|
+| Install | `npm ci` | Reproducible, clean dependency install |
+| Lint | `npm run lint` | ESLint static analysis (style + error rules) |
+| Test | `npm test` | Jest unit/integration tests with supertest |
+
+The workflow runs on **Node.js 22** and uses npm's built-in dependency cache to speed up installs.
+
+### Running CI checks locally
+
+```bash
+# Install dependencies
+npm ci
+
+# Run the linter (must pass with zero errors before merging)
+npm run lint
+
+# Auto-fix lint issues where possible
+npm run lint:fix
+
+# Run the test suite
+npm test
+```
+
+All three steps must pass for a branch to be considered mergeable.
+
 ## 📝 Development Guidelines
 
 ### Running Tests
@@ -185,8 +217,10 @@ Create a new dispute case.
 npm test
 ```
 
+Tests live under `src/__tests__/` and use **Jest** + **supertest**. Add a corresponding `*.test.js` file for every new route or middleware you introduce.
+
 ### Code Style
-- Use ES6+ syntax
+- Use ES6+ syntax (ESLint enforces `no-var`, `prefer-const`, `semi`, single quotes)
 - Follow Express.js best practices
 - Implement proper error handling
 - Use middleware for cross-cutting concerns

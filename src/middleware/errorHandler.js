@@ -2,7 +2,7 @@
  * Central error-handling middleware.
  * Must be registered AFTER all routes in Express (4-argument signature).
  */
-// eslint-disable-next-line no-unused-vars
+// next is required for Express's 4-arg error handler signature
 function errorHandler(err, req, res, next) {
   const status = err.status || err.statusCode || 500;
   const message = err.message || 'Internal Server Error';
