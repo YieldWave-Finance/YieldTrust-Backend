@@ -217,7 +217,7 @@ All three steps must pass for a branch to be considered mergeable.
 npm test
 ```
 
-Tests live under `src/__tests__/` and use **Jest** + **supertest**. Add a corresponding `*.test.js` file for every new route or middleware you introduce.
+Tests live under `src/__tests__/` and use **Jest** + **supertest**. `npm test` runs the suite with coverage thresholds so placeholder tests cannot pass CI unnoticed. Add a corresponding `*.test.js` file for every new route, service adapter, or middleware you introduce.
 
 ### Code Style
 - Use ES6+ syntax (ESLint enforces `no-var`, `prefer-const`, `semi`, single quotes)

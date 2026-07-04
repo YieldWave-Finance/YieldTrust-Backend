@@ -28,8 +28,11 @@ app.use('/', routes);
 // --- Error handling (must come last) ---
 app.use(errorHandler);
 
-app.listen(PORT, () =>
-  console.log(`Grant API running on port ${PORT} in ${NODE_ENV} mode`)
-);
+/* istanbul ignore next */
+if (require.main === module) {
+  app.listen(PORT, () =>
+    console.log(`Grant API running on port ${PORT} in ${NODE_ENV} mode`)
+  );
+}
 
 module.exports = app; // export for testing
