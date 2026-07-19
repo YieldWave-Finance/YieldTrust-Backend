@@ -17,9 +17,9 @@ app.use(express.json());
 // --- Routes ---
 app.get('/', (req, res) => {
   res.json({
-    project: 'Grant Stream',
-    status: 'Tracking Grants',
-    contract: 'CD6OGC46OFCV52IJQKEDVKLX5ASA3ZMSTHAAZQIPDSJV6VZ3KUJDEP4D',
+    project: process.env.PROJECT_NAME || 'Grant Stream',
+    status: process.env.API_STATUS || 'API Running',
+    contract: process.env.CONTRACT_ADDRESS || 'Not configured',
   });
 });
 
