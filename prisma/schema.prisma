@@ -1,0 +1,98 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Status {
+  ACTIVE
+  COMPLETED
+  DISPUTED
+  PAUSED
+  CANCELLED
+}
+
+enum EscrowStatus {
+  HELD
+  RELEASED
+  DISPUTED
+  EXPIRED
+}
+
+enum DisputeStatus {
+  OPEN
+  IN_REVIEW
+  RESOLVED
+  DISMISSED
+}
+
+model TrustFund {
+  id               String   @id @default(ulid())
+  name             String
+  total_amount     Decimal  @map("totalAmount") @db.Decimal(20, 2)
+  currency         String   @default("USD")
+  beneficiary      String // blockchain address
+  contract_address String   @map("contractAddress")
+  status           Status   @default(ACTIVE)
+  created_at       DateTime @default(now()) @map("createdAt")
+  updated_at       DateTime @updatedAt @map("updatedAt")
+
+  milestones Milestone[]
+  escrows    Escrow[]
+  disputes   Dispute[]
+
+  @@index([beneficiary])
+  @@index([contract_address])
+  @@map("trustFund")
+}
+
+model Milestone {
+  id                String    @id @default(ulid())
+  fund_id           String    @map("fundId")
+  fund              TrustFund @relation(fields: [fund_id], references: [id], onDelete: Cascade)
+  proof_hash        String?   @map("proofHash")
+  amount_to_release Decimal   @map("amountToRelease") @db.Decimal(20, 2)
+  verified          Boolean   @default(false)
+  verified_at       DateTime? @map("verifiedAt")
+  created_at        DateTime  @default(now()) @map("createdAt")
+  updated_at        DateTime  @updatedAt @map("updatedAt")
+
+  @@index([fund_id])
+}
+
+model Escrow {
+  id          String       @id @default(ulid())
+  fund_id     String       @map("fundId")
+  fund        TrustFund    @relation(fields: [fund_id], references: [id], onDelete: Cascade)
+  amount      Decimal      @db.Decimal(20, 2)
+  status      EscrowStatus @default(HELD)
+  released_at DateTime?    @map("releasedAt")
+  created_at  DateTime     @default(now()) @map("createdAt")
+  updated_at  DateTime     @updatedAt @map("updatedAt")
+
+  @@index([fund_id])
+}
+
+model Dispute {
+  id          String        @id @default(ulid())
+  fund_id     String        @map("fundId")
+  fund        TrustFund     @relation(fields: [fund_id], references: [id], onDelete: Cascade)
+  reason      String
+  description String?
+  reported_by String        @map("reportedBy") // blockchain address
+  status      DisputeStatus @default(OPEN)
+  resolved_at DateTime?     @map("resolvedAt")
+  created_at  DateTime      @default(now()) @map("createdAt")
+  updated_at  DateTime      @updatedAt @map("updatedAt")
+
+  @@index([fund_id])
+  @@index([reported_by])
+}

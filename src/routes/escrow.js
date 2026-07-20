@@ -1,169 +1,69 @@
 const express = require('express');
 const router = express.Router();
-const { escrowService } = require('../services/dataStore');
+const { prisma } = require('../lib/db');
 
-/**
- * GET /escrow
- * List all escrow contracts
- */
-router.get('/', (req, res) => {
+// GET /escrow - list all escrows
+router.get('/', async (req, res, next) => {
   try {
-    const escrows = escrowService.getAll();
-    res.json({
-      success: true,
-      data: escrows,
-      count: escrows.length,
-    });
+    const escrows = await prisma.escrow.findMany();
+    res.json(escrows);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
-/**
- * GET /escrow/:id
- * Get a specific escrow contract by ID
- */
-router.get('/:id', (req, res) => {
+// GET /escrow/:id - get an escrow by id
+router.get('/:id', async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const escrow = escrowService.getById(id);
-
-    if (!escrow) {
-      return res.status(404).json({
-        success: false,
-        error: `Escrow with ID ${id} not found`,
-      });
-    }
-
-    res.json({
-      success: true,
-      data: escrow,
+    const escrow = await prisma.escrow.findUnique({
+      where: { id: req.params.id },
     });
+    if (!escrow) return res.status(404).json({ error: 'Escrow not found' });
+    res.json(escrow);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
-/**
- * POST /escrow
- * Create a new escrow contract
- * Request body: { amount, beneficiary, releaseDate, description }
- */
-router.post('/', (req, res) => {
+// POST /escrow - create a new escrow
+router.post('/', async (req, res, next) => {
   try {
-    const { amount, beneficiary, releaseDate, description } = req.body;
-
-    // Validation
-    if (!amount || !beneficiary) {
-      return res.status(400).json({
-        success: false,
-        error: 'amount and beneficiary are required',
-      });
-    }
-
-    if (typeof amount !== 'number' || amount <= 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'amount must be a positive number',
-      });
-    }
-
-    const newEscrow = escrowService.create({
-      amount,
-      beneficiary,
-      releaseDate: releaseDate || null,
-      description: description || '',
+    const { fund_id, amount, status } = req.body;
+    const escrow = await prisma.escrow.create({
+      data: {
+        fund_id,
+        amount,
+        status,
+      },
     });
-
-    res.status(201).json({
-      success: true,
-      message: 'Escrow contract created successfully',
-      data: newEscrow,
-    });
+    res.status(201).json(escrow);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
-/**
- * PUT /escrow/:id
- * Update an existing escrow contract
- * Request body: { amount, beneficiary, releaseDate, description, status }
- */
-router.put('/:id', (req, res) => {
+// PUT /escrow/:id - update an escrow
+router.put('/:id', async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const escrow = escrowService.getById(id);
-
-    if (!escrow) {
-      return res.status(404).json({
-        success: false,
-        error: `Escrow with ID ${id} not found`,
-      });
-    }
-
-    const { amount, beneficiary, releaseDate, description, status } = req.body;
-
-    // Validate amount if provided
-    if (amount !== undefined) {
-      if (typeof amount !== 'number' || amount <= 0) {
-        return res.status(400).json({
-          success: false,
-          error: 'amount must be a positive number',
-        });
-      }
-    }
-
-    const updatedEscrow = escrowService.update(id, {
-      ...(amount !== undefined && { amount }),
-      ...(beneficiary && { beneficiary }),
-      ...(releaseDate !== undefined && { releaseDate }),
-      ...(description !== undefined && { description }),
-      ...(status && { status }),
+    const escrow = await prisma.escrow.update({
+      where: { id: req.params.id },
+      data: req.body,
     });
-
-    res.json({
-      success: true,
-      message: 'Escrow contract updated successfully',
-      data: updatedEscrow,
-    });
+    res.json(escrow);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
-/**
- * DELETE /escrow/:id
- * Delete an escrow contract
- */
-router.delete('/:id', (req, res) => {
+// DELETE /escrow/:id - delete an escrow
+router.delete('/:id', async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const escrow = escrowService.getById(id);
-
-    if (!escrow) {
-      return res.status(404).json({
-        success: false,
-        error: `Escrow with ID ${id} not found`,
-      });
-    }
-
-    const deleted = escrowService.delete(id);
-
-    if (deleted) {
-      res.json({
-        success: true,
-        message: 'Escrow contract deleted successfully',
-        data: { id: parseInt(id, 10) },
-      });
-    } else {
-      res.status(500).json({
-        success: false,
-        error: 'Failed to delete escrow contract',
-      });
-    }
+    await prisma.escrow.delete({
+      where: { id: req.params.id },
+    });
+    res.status(204).send();
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
