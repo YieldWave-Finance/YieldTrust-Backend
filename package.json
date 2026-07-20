@@ -7,13 +7,21 @@
     "start": "node index.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "jest --runInBand --forceExit"
+    "test": "jest --runInBand --forceExit --coverage"
   },
   "jest": {
     "testEnvironment": "node",
     "testMatch": [
       "**/__tests__/**/*.test.js"
-    ]
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 30,
+        "functions": 80,
+        "lines": 80,
+        "statements": 80
+      }
+    }
   },
   "dependencies": {
     "cors": "^2.8.6",
