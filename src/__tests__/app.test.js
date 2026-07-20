@@ -11,10 +11,12 @@ describe('GET /', () => {
 });
 
 describe('GET /escrow', () => {
-  it('returns escrow routes active message', async () => {
+  it('returns list of escrow contracts', async () => {
     const res = await request(app).get('/escrow');
     expect(res.statusCode).toBe(200);
-    expect(res.body).toHaveProperty('message', 'Escrow routes active');
+    expect(res.body).toHaveProperty('success', true);
+    expect(res.body).toHaveProperty('data');
+    expect(Array.isArray(res.body.data)).toBe(true);
   });
 });
 
@@ -23,5 +25,8 @@ describe('GET /grant', () => {
     const res = await request(app).get('/grant');
     expect(res.statusCode).toBe(200);
     expect(res.body).toHaveProperty('project', 'Grant Stream');
+    expect(res.body).toHaveProperty('success', true);
+    expect(res.body).toHaveProperty('data');
+    expect(Array.isArray(res.body.data)).toBe(true);
   });
 });
