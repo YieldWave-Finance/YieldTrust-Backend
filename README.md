@@ -169,6 +169,20 @@ Create a new dispute case.
 }
 ```
 
+## 🧾 Request Body Handling & Validation
+
+All JSON request bodies are treated as untrusted and validated before use:
+
+- **JSON limit:** Request bodies are parsed with a conservative **10kb** limit (`express.json({ limit: '10kb', strict: true })`). Multipart/form-data is not parsed.
+- **Oversized payloads:** Bodies larger than 10kb are rejected with HTTP **413** `{ "error": "Payload too large" }`.
+- **Malformed JSON:** Invalid JSON is rejected with HTTP **400** `{ "error": "Invalid JSON payload" }`.
+- **Prototype-pollution hardening:** Payloads containing `__proto__`, `prototype`, or `constructor` keys (at any depth) are rejected with HTTP **400** `{ "error": "Forbidden key in JSON payload" }`.
+- **No internal leakage:** Error responses never include stack traces, raw request bodies, internal error objects, dependency versions, or filesystem paths.
+
+> **Note:** Only `GET /` is implemented today. The trust-fund, milestone, and dispute endpoints below are documented as future work and do **not** yet exist.
+
+`src/middleware/jsonSecurity.js` exports reusable middleware/helpers (`jsonBodyParser`, `sanitizeJsonBody`, `requireObjectBody`, `jsonErrorHandler`). The app mounts `jsonBodyParser` + `sanitizeJsonBody` globally, so every route gets the 10kb limit and prototype-pollution guard automatically. Future POST routes should additionally mount `requireObjectBody` (or stricter route-specific field validation) on the route. The `app` is exported and only calls `app.listen(...)` when run directly, so it can be imported in tests without opening a port.
+
 ## 🔒 Security Best Practices
 
 1. **Environment Variables:** Never commit `.env` files containing sensitive data
