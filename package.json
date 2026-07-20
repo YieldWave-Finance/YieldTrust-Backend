@@ -1,7 +1,7 @@
 {
-  "name": "agritrust-backend",
+  "name": "yieldtrust-backend",
   "version": "1.0.0",
-  "description": "API for AgriTrust Protocol",
+  "description": "API for YieldTrust Protocol",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
