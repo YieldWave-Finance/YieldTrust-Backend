@@ -26,3 +26,9 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+
+# Database
+data/
+
+# Test coverage
+coverage/
