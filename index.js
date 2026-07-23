@@ -3,6 +3,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 const express = require('express');
+const cors = require('cors');
 
 const {
   jsonBodyParser,
@@ -21,6 +22,15 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 // Hardened JSON parsing: 10kb limit, strict mode, prototype-pollution guard.
 // Every route declared after this gets the hardening automatically.
 app.use(jsonBodyParser, sanitizeJsonBody);
+
+// --- CORS ---
+// Allow cross-origin requests from configured origin
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+}));
 
 // --- Routes ---
 app.get('/', (req, res) => {
