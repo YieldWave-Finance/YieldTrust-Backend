@@ -10,6 +10,7 @@ const {
   sanitizeJsonBody,
   jsonErrorHandler
 } = require('./src/middleware/jsonSecurity');
+const { rateLimit } = require('./src/middleware/rateLimiter');
 const routes = require('./src/routes');
 const errorHandler = require('./src/middleware/errorHandler');
 
@@ -23,14 +24,9 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 // Every route declared after this gets the hardening automatically.
 app.use(jsonBodyParser, sanitizeJsonBody);
 
-// --- CORS ---
-// Allow cross-origin requests from configured origin
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-}));
+// Rate limiting: protects all routes from abuse.
+// Configure via RATE_LIMIT_WINDOW_MS and RATE_LIMIT_MAX env vars.
+app.use(rateLimit());
 
 // --- Routes ---
 app.get('/', (req, res) => {

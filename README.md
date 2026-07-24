@@ -244,3 +244,26 @@ Contributions are highly welcome. Please ensure your commits are cryptographical
 
 ## 📄 License
 Please refer to the LICENSE file for licensing information.
+
+## Authentication
+
+The API supports two authentication methods:
+
+### API Key
+Include the `x-api-key` header with your API key:
+```bash
+curl -H "x-api-key: your-api-key" https://api.example.com/escrow
+```
+
+### Bearer Token
+Include the `Authorization` header with a Bearer token:
+```bash
+curl -H "Authorization: Bearer your-token" https://api.example.com/escrow
+```
+
+### Public vs Protected Routes
+- **Public (GET only):** `/`, `/escrow`, `/grant` — no auth required
+- **Protected (POST/PUT/DELETE/PATCH):** All mutating routes require authentication
+
+### Configuration
+Set `API_KEY` in your `.env` file to configure the API key.
