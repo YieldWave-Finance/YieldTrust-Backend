@@ -30,3 +30,20 @@ describe('GET /grant', () => {
     expect(Array.isArray(res.body.data)).toBe(true);
   });
 });
+
+describe('Unknown routes', () => {
+  it('returns the standardized JSON error shape', async () => {
+    const res = await request(app).get('/missing-route');
+    expect(res.statusCode).toBe(404);
+    expect(res.body).toEqual({
+      error: {
+        message: 'Route not found',
+        code: 'NOT_FOUND',
+        details: {
+          method: 'GET',
+          path: '/missing-route',
+        },
+      },
+    });
+  });
+});
