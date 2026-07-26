@@ -11,6 +11,7 @@ const {
   jsonErrorHandler
 } = require('./src/middleware/jsonSecurity');
 const { rateLimit } = require('./src/middleware/rateLimiter');
+const { authenticate } = require('./src/middleware/auth');
 const routes = require('./src/routes');
 const errorHandler = require('./src/middleware/errorHandler');
 
@@ -27,6 +28,9 @@ app.use(jsonBodyParser, sanitizeJsonBody);
 // Rate limiting: protects all routes from abuse.
 // Configure via RATE_LIMIT_WINDOW_MS and RATE_LIMIT_MAX env vars.
 app.use(rateLimit());
+
+// Public reads stay open; mutating routes require an API key or bearer token.
+app.use(authenticate);
 
 // --- Routes ---
 app.get('/', (req, res) => {
