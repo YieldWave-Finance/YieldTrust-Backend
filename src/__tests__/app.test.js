@@ -8,6 +8,13 @@ describe('GET /', () => {
     expect(res.body).toHaveProperty('project');
     expect(res.body).toHaveProperty('status');
   });
+
+  it('sets CORS headers for browser clients', async () => {
+    const res = await request(app)
+      .get('/')
+      .set('Origin', 'https://example.com');
+    expect(res.headers['access-control-allow-origin']).toBe('*');
+  });
 });
 
 describe('GET /escrow', () => {
