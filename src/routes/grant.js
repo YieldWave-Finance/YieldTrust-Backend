@@ -1,13 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const { grantService } = require('../services/dataStore');
+const { rules, validateBody, validateIdParam, validateQuery } = require('../middleware/validation');
+
+const GRANT_STATUSES = ['pending', 'approved', 'disbursed', 'rejected'];
 
 /**
  * GET /grant
  * List all grants or filter by query parameters
  * Query params: ?beneficiary=<address>&status=<status>
  */
-router.get('/', (req, res) => {
+router.get('/', validateQuery(['beneficiary', 'status']), (req, res) => {
   try {
     const { beneficiary, status } = req.query;
     let grants = grantService.getAll();
@@ -38,7 +41,7 @@ router.get('/', (req, res) => {
  * GET /grant/:id
  * Get a specific grant by ID
  */
-router.get('/:id', (req, res) => {
+router.get('/:id', validateIdParam(), (req, res) => {
   try {
     const { id } = req.params;
     const grant = grantService.getById(id);
@@ -64,24 +67,18 @@ router.get('/:id', (req, res) => {
  * Create a new grant
  * Request body: { name, amount, currency, beneficiary, description }
  */
-router.post('/', (req, res) => {
+router.post(
+  '/',
+  validateBody([
+    rules.requiredString('name'),
+    rules.positiveNumber('amount'),
+    rules.requiredString('currency'),
+    rules.requiredString('beneficiary'),
+    rules.optionalString('description'),
+  ]),
+  (req, res) => {
   try {
     const { name, amount, currency, beneficiary, description } = req.body;
-
-    // Validation
-    if (!name || !amount || !currency || !beneficiary) {
-      return res.status(400).json({
-        success: false,
-        error: 'name, amount, currency, and beneficiary are required',
-      });
-    }
-
-    if (typeof amount !== 'number' || amount <= 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'amount must be a positive number',
-      });
-    }
 
     const newGrant = grantService.create({
       name,
@@ -106,7 +103,18 @@ router.post('/', (req, res) => {
  * Update an existing grant
  * Request body: { name, amount, currency, beneficiary, description, status }
  */
-router.put('/:id', (req, res) => {
+router.put(
+  '/:id',
+  validateIdParam(),
+  validateBody([
+    rules.optionalString('name'),
+    rules.optionalPositiveNumber('amount'),
+    rules.optionalString('currency'),
+    rules.optionalString('beneficiary'),
+    rules.optionalString('description'),
+    rules.optionalEnum('status', GRANT_STATUSES),
+  ]),
+  (req, res) => {
   try {
     const { id } = req.params;
     const grant = grantService.getById(id);
@@ -120,16 +128,6 @@ router.put('/:id', (req, res) => {
 
     const { name, amount, currency, beneficiary, description, status } =
       req.body;
-
-    // Validate amount if provided
-    if (amount !== undefined) {
-      if (typeof amount !== 'number' || amount <= 0) {
-        return res.status(400).json({
-          success: false,
-          error: 'amount must be a positive number',
-        });
-      }
-    }
 
     const updatedGrant = grantService.update(id, {
       ...(name && { name }),
@@ -155,25 +153,14 @@ router.put('/:id', (req, res) => {
  * Update grant status (e.g., pending, approved, disbursed)
  * Request body: { status }
  */
-router.patch('/:id/status', (req, res) => {
+router.patch(
+  '/:id/status',
+  validateIdParam(),
+  validateBody([rules.requiredString('status'), rules.optionalEnum('status', GRANT_STATUSES)]),
+  (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-
-    if (!status) {
-      return res.status(400).json({
-        success: false,
-        error: 'status is required',
-      });
-    }
-
-    const validStatuses = ['pending', 'approved', 'disbursed', 'rejected'];
-    if (!validStatuses.includes(status)) {
-      return res.status(400).json({
-        success: false,
-        error: `status must be one of: ${validStatuses.join(', ')}`,
-      });
-    }
 
     const grant = grantService.getById(id);
 
@@ -200,7 +187,7 @@ router.patch('/:id/status', (req, res) => {
  * DELETE /grant/:id
  * Delete a grant
  */
-router.delete('/:id', (req, res) => {
+router.delete('/:id', validateIdParam(), (req, res) => {
   try {
     const { id } = req.params;
     const grant = grantService.getById(id);
