@@ -18,8 +18,12 @@ const app = express();
 
 const PORT = parseInt(process.env.PORT, 10) || 3000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
+const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
 
 // --- Core middleware ---
+// Allow configured frontend clients before JSON/rate-limit middleware runs.
+app.use(cors({ origin: CORS_ORIGIN }));
+
 // Hardened JSON parsing: 10kb limit, strict mode, prototype-pollution guard.
 // Every route declared after this gets the hardening automatically.
 app.use(jsonBodyParser, sanitizeJsonBody);
