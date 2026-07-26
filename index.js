@@ -13,6 +13,7 @@ const {
 const { rateLimit } = require('./src/middleware/rateLimiter');
 const routes = require('./src/routes');
 const errorHandler = require('./src/middleware/errorHandler');
+const logger = require('./src/utils/logger');
 
 const app = express();
 
@@ -45,9 +46,12 @@ app.use(jsonErrorHandler);
 app.use(errorHandler);
 
 if (require.main === module) {
-  app.listen(PORT, () =>
-    console.log(`Grant API running on port ${PORT} in ${NODE_ENV} mode`)
-  );
+  app.listen(PORT, () => {
+    logger.info('Grant API started', {
+      port: PORT,
+      nodeEnv: NODE_ENV,
+    });
+  });
 }
 
 module.exports = app; // export for testing
