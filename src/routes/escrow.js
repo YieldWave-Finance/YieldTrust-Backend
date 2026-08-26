@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { escrowService } = require('../services/dataStore');
 const { errorResponse, ERROR_CODES } = require('../utils/errorResponse');
+const { validate, escrowCreateSchema, escrowUpdateSchema } = require('../middleware/validation');
 
 /**
  * GET /escrow
@@ -59,26 +60,9 @@ router.get('/:id', (req, res) => {
  * Create a new escrow contract
  * Request body: { amount, beneficiary, releaseDate, description }
  */
-router.post('/', (req, res) => {
+router.post('/', validate(escrowCreateSchema), (req, res) => {
   try {
     const { amount, beneficiary, releaseDate, description } = req.body;
-
-    // Validation
-    if (!amount || !beneficiary) {
-      return errorResponse(res, {
-        status: 400,
-        message: 'amount and beneficiary are required',
-        code: ERROR_CODES.VALIDATION_ERROR,
-      });
-    }
-
-    if (typeof amount !== 'number' || amount <= 0) {
-      return errorResponse(res, {
-        status: 400,
-        message: 'amount must be a positive number',
-        code: ERROR_CODES.VALIDATION_ERROR,
-      });
-    }
 
     const newEscrow = escrowService.create({
       amount,
@@ -106,7 +90,7 @@ router.post('/', (req, res) => {
  * Update an existing escrow contract
  * Request body: { amount, beneficiary, releaseDate, description, status }
  */
-router.put('/:id', (req, res) => {
+router.put('/:id', validate(escrowUpdateSchema), (req, res) => {
   try {
     const { id } = req.params;
     const escrow = escrowService.getById(id);
@@ -120,17 +104,6 @@ router.put('/:id', (req, res) => {
     }
 
     const { amount, beneficiary, releaseDate, description, status } = req.body;
-
-    // Validate amount if provided
-    if (amount !== undefined) {
-      if (typeof amount !== 'number' || amount <= 0) {
-        return errorResponse(res, {
-          status: 400,
-          message: 'amount must be a positive number',
-          code: ERROR_CODES.VALIDATION_ERROR,
-        });
-      }
-    }
 
     const updatedEscrow = escrowService.update(id, {
       ...(amount !== undefined && { amount }),

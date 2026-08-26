@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { grantService } = require('../services/dataStore');
 const { errorResponse, ERROR_CODES } = require('../utils/errorResponse');
+const { validate, grantCreateSchema, grantUpdateSchema, statusUpdateSchema } = require('../middleware/validation');
 
 /**
  * GET /grant
@@ -74,26 +75,9 @@ router.get('/:id', (req, res) => {
  * Create a new grant
  * Request body: { name, amount, currency, beneficiary, description }
  */
-router.post('/', (req, res) => {
+router.post('/', validate(grantCreateSchema), (req, res) => {
   try {
     const { name, amount, currency, beneficiary, description } = req.body;
-
-    // Validation
-    if (!name || !amount || !currency || !beneficiary) {
-      return errorResponse(res, {
-        status: 400,
-        message: 'name, amount, currency, and beneficiary are required',
-        code: ERROR_CODES.VALIDATION_ERROR,
-      });
-    }
-
-    if (typeof amount !== 'number' || amount <= 0) {
-      return errorResponse(res, {
-        status: 400,
-        message: 'amount must be a positive number',
-        code: ERROR_CODES.VALIDATION_ERROR,
-      });
-    }
 
     const newGrant = grantService.create({
       name,
@@ -122,7 +106,7 @@ router.post('/', (req, res) => {
  * Update an existing grant
  * Request body: { name, amount, currency, beneficiary, description, status }
  */
-router.put('/:id', (req, res) => {
+router.put('/:id', validate(grantUpdateSchema), (req, res) => {
   try {
     const { id } = req.params;
     const grant = grantService.getById(id);
@@ -137,17 +121,6 @@ router.put('/:id', (req, res) => {
 
     const { name, amount, currency, beneficiary, description, status } =
       req.body;
-
-    // Validate amount if provided
-    if (amount !== undefined) {
-      if (typeof amount !== 'number' || amount <= 0) {
-        return errorResponse(res, {
-          status: 400,
-          message: 'amount must be a positive number',
-          code: ERROR_CODES.VALIDATION_ERROR,
-        });
-      }
-    }
 
     const updatedGrant = grantService.update(id, {
       ...(name && { name }),
@@ -177,27 +150,10 @@ router.put('/:id', (req, res) => {
  * Update grant status (e.g., pending, approved, disbursed)
  * Request body: { status }
  */
-router.patch('/:id/status', (req, res) => {
+router.patch('/:id/status', validate(statusUpdateSchema), (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-
-    if (!status) {
-      return errorResponse(res, {
-        status: 400,
-        message: 'status is required',
-        code: ERROR_CODES.VALIDATION_ERROR,
-      });
-    }
-
-    const validStatuses = ['pending', 'approved', 'disbursed', 'rejected'];
-    if (!validStatuses.includes(status)) {
-      return errorResponse(res, {
-        status: 400,
-        message: `status must be one of: ${validStatuses.join(', ')}`,
-        code: ERROR_CODES.VALIDATION_ERROR,
-      });
-    }
 
     const grant = grantService.getById(id);
 
