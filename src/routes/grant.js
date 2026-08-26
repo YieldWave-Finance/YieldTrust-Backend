@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const { grantService } = require('../services/dataStore');
+const { errorResponse, ERROR_CODES } = require('../utils/errorResponse');
+const { validate, grantCreateSchema, grantUpdateSchema, statusUpdateSchema } = require('../middleware/validation');
 
 /**
  * GET /grant
@@ -30,7 +32,11 @@ router.get('/', (req, res) => {
       contract: 'CD6OGC46OFCV52IJQKEDVKLX5ASA3ZMSTHAAZQIPDSJV6VZ3KUJDEP4D',
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    errorResponse(res, {
+      status: 500,
+      message: error.message,
+      code: ERROR_CODES.INTERNAL_ERROR,
+    });
   }
 });
 
@@ -44,9 +50,10 @@ router.get('/:id', (req, res) => {
     const grant = grantService.getById(id);
 
     if (!grant) {
-      return res.status(404).json({
-        success: false,
-        error: `Grant with ID ${id} not found`,
+      return errorResponse(res, {
+        status: 404,
+        message: `Grant with ID ${id} not found`,
+        code: ERROR_CODES.NOT_FOUND,
       });
     }
 
@@ -55,7 +62,11 @@ router.get('/:id', (req, res) => {
       data: grant,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    errorResponse(res, {
+      status: 500,
+      message: error.message,
+      code: ERROR_CODES.INTERNAL_ERROR,
+    });
   }
 });
 
@@ -64,24 +75,9 @@ router.get('/:id', (req, res) => {
  * Create a new grant
  * Request body: { name, amount, currency, beneficiary, description }
  */
-router.post('/', (req, res) => {
+router.post('/', validate(grantCreateSchema), (req, res) => {
   try {
     const { name, amount, currency, beneficiary, description } = req.body;
-
-    // Validation
-    if (!name || !amount || !currency || !beneficiary) {
-      return res.status(400).json({
-        success: false,
-        error: 'name, amount, currency, and beneficiary are required',
-      });
-    }
-
-    if (typeof amount !== 'number' || amount <= 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'amount must be a positive number',
-      });
-    }
 
     const newGrant = grantService.create({
       name,
@@ -97,7 +93,11 @@ router.post('/', (req, res) => {
       data: newGrant,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    errorResponse(res, {
+      status: 500,
+      message: error.message,
+      code: ERROR_CODES.INTERNAL_ERROR,
+    });
   }
 });
 
@@ -106,30 +106,21 @@ router.post('/', (req, res) => {
  * Update an existing grant
  * Request body: { name, amount, currency, beneficiary, description, status }
  */
-router.put('/:id', (req, res) => {
+router.put('/:id', validate(grantUpdateSchema), (req, res) => {
   try {
     const { id } = req.params;
     const grant = grantService.getById(id);
 
     if (!grant) {
-      return res.status(404).json({
-        success: false,
-        error: `Grant with ID ${id} not found`,
+      return errorResponse(res, {
+        status: 404,
+        message: `Grant with ID ${id} not found`,
+        code: ERROR_CODES.NOT_FOUND,
       });
     }
 
     const { name, amount, currency, beneficiary, description, status } =
       req.body;
-
-    // Validate amount if provided
-    if (amount !== undefined) {
-      if (typeof amount !== 'number' || amount <= 0) {
-        return res.status(400).json({
-          success: false,
-          error: 'amount must be a positive number',
-        });
-      }
-    }
 
     const updatedGrant = grantService.update(id, {
       ...(name && { name }),
@@ -146,7 +137,11 @@ router.put('/:id', (req, res) => {
       data: updatedGrant,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    errorResponse(res, {
+      status: 500,
+      message: error.message,
+      code: ERROR_CODES.INTERNAL_ERROR,
+    });
   }
 });
 
@@ -155,32 +150,18 @@ router.put('/:id', (req, res) => {
  * Update grant status (e.g., pending, approved, disbursed)
  * Request body: { status }
  */
-router.patch('/:id/status', (req, res) => {
+router.patch('/:id/status', validate(statusUpdateSchema), (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
 
-    if (!status) {
-      return res.status(400).json({
-        success: false,
-        error: 'status is required',
-      });
-    }
-
-    const validStatuses = ['pending', 'approved', 'disbursed', 'rejected'];
-    if (!validStatuses.includes(status)) {
-      return res.status(400).json({
-        success: false,
-        error: `status must be one of: ${validStatuses.join(', ')}`,
-      });
-    }
-
     const grant = grantService.getById(id);
 
     if (!grant) {
-      return res.status(404).json({
-        success: false,
-        error: `Grant with ID ${id} not found`,
+      return errorResponse(res, {
+        status: 404,
+        message: `Grant with ID ${id} not found`,
+        code: ERROR_CODES.NOT_FOUND,
       });
     }
 
@@ -192,7 +173,11 @@ router.patch('/:id/status', (req, res) => {
       data: updatedGrant,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    errorResponse(res, {
+      status: 500,
+      message: error.message,
+      code: ERROR_CODES.INTERNAL_ERROR,
+    });
   }
 });
 
@@ -206,9 +191,10 @@ router.delete('/:id', (req, res) => {
     const grant = grantService.getById(id);
 
     if (!grant) {
-      return res.status(404).json({
-        success: false,
-        error: `Grant with ID ${id} not found`,
+      return errorResponse(res, {
+        status: 404,
+        message: `Grant with ID ${id} not found`,
+        code: ERROR_CODES.NOT_FOUND,
       });
     }
 
@@ -221,13 +207,18 @@ router.delete('/:id', (req, res) => {
         data: { id: parseInt(id, 10) },
       });
     } else {
-      res.status(500).json({
-        success: false,
-        error: 'Failed to delete grant',
+      errorResponse(res, {
+        status: 500,
+        message: 'Failed to delete grant',
+        code: ERROR_CODES.INTERNAL_ERROR,
       });
     }
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    errorResponse(res, {
+      status: 500,
+      message: error.message,
+      code: ERROR_CODES.INTERNAL_ERROR,
+    });
   }
 });
 
