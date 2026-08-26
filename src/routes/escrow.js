@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { escrowService } = require('../services/dataStore');
+const { rules, validateBody, validateIdParam } = require('../middleware/validation');
 
 /**
  * GET /escrow
@@ -15,7 +16,11 @@ router.get('/', (req, res) => {
       count: escrows.length,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    errorResponse(res, {
+      status: 500,
+      message: error.message,
+      code: ERROR_CODES.INTERNAL_ERROR,
+    });
   }
 });
 
@@ -23,15 +28,16 @@ router.get('/', (req, res) => {
  * GET /escrow/:id
  * Get a specific escrow contract by ID
  */
-router.get('/:id', (req, res) => {
+router.get('/:id', validateIdParam(), (req, res) => {
   try {
     const { id } = req.params;
     const escrow = escrowService.getById(id);
 
     if (!escrow) {
-      return res.status(404).json({
-        success: false,
-        error: `Escrow with ID ${id} not found`,
+      return errorResponse(res, {
+        status: 404,
+        message: `Escrow with ID ${id} not found`,
+        code: ERROR_CODES.NOT_FOUND,
       });
     }
 
@@ -40,7 +46,11 @@ router.get('/:id', (req, res) => {
       data: escrow,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    errorResponse(res, {
+      status: 500,
+      message: error.message,
+      code: ERROR_CODES.INTERNAL_ERROR,
+    });
   }
 });
 
@@ -49,24 +59,17 @@ router.get('/:id', (req, res) => {
  * Create a new escrow contract
  * Request body: { amount, beneficiary, releaseDate, description }
  */
-router.post('/', (req, res) => {
+router.post(
+  '/',
+  validateBody([
+    rules.positiveNumber('amount'),
+    rules.requiredString('beneficiary'),
+    rules.optionalString('releaseDate'),
+    rules.optionalString('description'),
+  ]),
+  (req, res) => {
   try {
     const { amount, beneficiary, releaseDate, description } = req.body;
-
-    // Validation
-    if (!amount || !beneficiary) {
-      return res.status(400).json({
-        success: false,
-        error: 'amount and beneficiary are required',
-      });
-    }
-
-    if (typeof amount !== 'number' || amount <= 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'amount must be a positive number',
-      });
-    }
 
     const newEscrow = escrowService.create({
       amount,
@@ -81,7 +84,11 @@ router.post('/', (req, res) => {
       data: newEscrow,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    errorResponse(res, {
+      status: 500,
+      message: error.message,
+      code: ERROR_CODES.INTERNAL_ERROR,
+    });
   }
 });
 
@@ -90,29 +97,30 @@ router.post('/', (req, res) => {
  * Update an existing escrow contract
  * Request body: { amount, beneficiary, releaseDate, description, status }
  */
-router.put('/:id', (req, res) => {
+router.put(
+  '/:id',
+  validateIdParam(),
+  validateBody([
+    rules.optionalPositiveNumber('amount'),
+    rules.optionalString('beneficiary'),
+    rules.optionalString('releaseDate'),
+    rules.optionalString('description'),
+    rules.optionalString('status'),
+  ]),
+  (req, res) => {
   try {
     const { id } = req.params;
     const escrow = escrowService.getById(id);
 
     if (!escrow) {
-      return res.status(404).json({
-        success: false,
-        error: `Escrow with ID ${id} not found`,
+      return errorResponse(res, {
+        status: 404,
+        message: `Escrow with ID ${id} not found`,
+        code: ERROR_CODES.NOT_FOUND,
       });
     }
 
     const { amount, beneficiary, releaseDate, description, status } = req.body;
-
-    // Validate amount if provided
-    if (amount !== undefined) {
-      if (typeof amount !== 'number' || amount <= 0) {
-        return res.status(400).json({
-          success: false,
-          error: 'amount must be a positive number',
-        });
-      }
-    }
 
     const updatedEscrow = escrowService.update(id, {
       ...(amount !== undefined && { amount }),
@@ -128,7 +136,11 @@ router.put('/:id', (req, res) => {
       data: updatedEscrow,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    errorResponse(res, {
+      status: 500,
+      message: error.message,
+      code: ERROR_CODES.INTERNAL_ERROR,
+    });
   }
 });
 
@@ -136,15 +148,16 @@ router.put('/:id', (req, res) => {
  * DELETE /escrow/:id
  * Delete an escrow contract
  */
-router.delete('/:id', (req, res) => {
+router.delete('/:id', validateIdParam(), (req, res) => {
   try {
     const { id } = req.params;
     const escrow = escrowService.getById(id);
 
     if (!escrow) {
-      return res.status(404).json({
-        success: false,
-        error: `Escrow with ID ${id} not found`,
+      return errorResponse(res, {
+        status: 404,
+        message: `Escrow with ID ${id} not found`,
+        code: ERROR_CODES.NOT_FOUND,
       });
     }
 
@@ -157,13 +170,18 @@ router.delete('/:id', (req, res) => {
         data: { id: parseInt(id, 10) },
       });
     } else {
-      res.status(500).json({
-        success: false,
-        error: 'Failed to delete escrow contract',
+      errorResponse(res, {
+        status: 500,
+        message: 'Failed to delete escrow contract',
+        code: ERROR_CODES.INTERNAL_ERROR,
       });
     }
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    errorResponse(res, {
+      status: 500,
+      message: error.message,
+      code: ERROR_CODES.INTERNAL_ERROR,
+    });
   }
 });
 
