@@ -1,15 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const { grantService } = require('../services/dataStore');
-const { errorResponse, ERROR_CODES } = require('../utils/errorResponse');
-const { validate, grantCreateSchema, grantUpdateSchema, statusUpdateSchema } = require('../middleware/validation');
+const { rules, validateBody, validateIdParam, validateQuery } = require('../middleware/validation');
+
+const GRANT_STATUSES = ['pending', 'approved', 'disbursed', 'rejected'];
 
 /**
  * GET /grant
  * List all grants or filter by query parameters
  * Query params: ?beneficiary=<address>&status=<status>
  */
-router.get('/', (req, res) => {
+router.get('/', validateQuery(['beneficiary', 'status']), (req, res) => {
   try {
     const { beneficiary, status } = req.query;
     let grants = grantService.getAll();
@@ -44,7 +45,7 @@ router.get('/', (req, res) => {
  * GET /grant/:id
  * Get a specific grant by ID
  */
-router.get('/:id', (req, res) => {
+router.get('/:id', validateIdParam(), (req, res) => {
   try {
     const { id } = req.params;
     const grant = grantService.getById(id);
@@ -75,7 +76,16 @@ router.get('/:id', (req, res) => {
  * Create a new grant
  * Request body: { name, amount, currency, beneficiary, description }
  */
-router.post('/', validate(grantCreateSchema), (req, res) => {
+router.post(
+  '/',
+  validateBody([
+    rules.requiredString('name'),
+    rules.positiveNumber('amount'),
+    rules.requiredString('currency'),
+    rules.requiredString('beneficiary'),
+    rules.optionalString('description'),
+  ]),
+  (req, res) => {
   try {
     const { name, amount, currency, beneficiary, description } = req.body;
 
@@ -106,7 +116,18 @@ router.post('/', validate(grantCreateSchema), (req, res) => {
  * Update an existing grant
  * Request body: { name, amount, currency, beneficiary, description, status }
  */
-router.put('/:id', validate(grantUpdateSchema), (req, res) => {
+router.put(
+  '/:id',
+  validateIdParam(),
+  validateBody([
+    rules.optionalString('name'),
+    rules.optionalPositiveNumber('amount'),
+    rules.optionalString('currency'),
+    rules.optionalString('beneficiary'),
+    rules.optionalString('description'),
+    rules.optionalEnum('status', GRANT_STATUSES),
+  ]),
+  (req, res) => {
   try {
     const { id } = req.params;
     const grant = grantService.getById(id);
@@ -150,7 +171,11 @@ router.put('/:id', validate(grantUpdateSchema), (req, res) => {
  * Update grant status (e.g., pending, approved, disbursed)
  * Request body: { status }
  */
-router.patch('/:id/status', validate(statusUpdateSchema), (req, res) => {
+router.patch(
+  '/:id/status',
+  validateIdParam(),
+  validateBody([rules.requiredString('status'), rules.optionalEnum('status', GRANT_STATUSES)]),
+  (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
@@ -185,7 +210,7 @@ router.patch('/:id/status', validate(statusUpdateSchema), (req, res) => {
  * DELETE /grant/:id
  * Delete a grant
  */
-router.delete('/:id', (req, res) => {
+router.delete('/:id', validateIdParam(), (req, res) => {
   try {
     const { id } = req.params;
     const grant = grantService.getById(id);

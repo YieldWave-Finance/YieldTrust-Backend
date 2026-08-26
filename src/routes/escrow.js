@@ -1,8 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { escrowService } = require('../services/dataStore');
-const { errorResponse, ERROR_CODES } = require('../utils/errorResponse');
-const { validate, escrowCreateSchema, escrowUpdateSchema } = require('../middleware/validation');
+const { rules, validateBody, validateIdParam } = require('../middleware/validation');
 
 /**
  * GET /escrow
@@ -29,7 +28,7 @@ router.get('/', (req, res) => {
  * GET /escrow/:id
  * Get a specific escrow contract by ID
  */
-router.get('/:id', (req, res) => {
+router.get('/:id', validateIdParam(), (req, res) => {
   try {
     const { id } = req.params;
     const escrow = escrowService.getById(id);
@@ -60,7 +59,15 @@ router.get('/:id', (req, res) => {
  * Create a new escrow contract
  * Request body: { amount, beneficiary, releaseDate, description }
  */
-router.post('/', validate(escrowCreateSchema), (req, res) => {
+router.post(
+  '/',
+  validateBody([
+    rules.positiveNumber('amount'),
+    rules.requiredString('beneficiary'),
+    rules.optionalString('releaseDate'),
+    rules.optionalString('description'),
+  ]),
+  (req, res) => {
   try {
     const { amount, beneficiary, releaseDate, description } = req.body;
 
@@ -90,7 +97,17 @@ router.post('/', validate(escrowCreateSchema), (req, res) => {
  * Update an existing escrow contract
  * Request body: { amount, beneficiary, releaseDate, description, status }
  */
-router.put('/:id', validate(escrowUpdateSchema), (req, res) => {
+router.put(
+  '/:id',
+  validateIdParam(),
+  validateBody([
+    rules.optionalPositiveNumber('amount'),
+    rules.optionalString('beneficiary'),
+    rules.optionalString('releaseDate'),
+    rules.optionalString('description'),
+    rules.optionalString('status'),
+  ]),
+  (req, res) => {
   try {
     const { id } = req.params;
     const escrow = escrowService.getById(id);
@@ -131,7 +148,7 @@ router.put('/:id', validate(escrowUpdateSchema), (req, res) => {
  * DELETE /escrow/:id
  * Delete an escrow contract
  */
-router.delete('/:id', (req, res) => {
+router.delete('/:id', validateIdParam(), (req, res) => {
   try {
     const { id } = req.params;
     const escrow = escrowService.getById(id);
