@@ -15,7 +15,6 @@ const { authenticate } = require('./src/middleware/auth');
 const routes = require('./src/routes');
 const errorHandler = require('./src/middleware/errorHandler');
 const logger = require('./src/utils/logger');
-const { errorResponse, ERROR_CODES } = require('./src/utils/errorResponse');
 
 const app = express();
 
@@ -55,9 +54,12 @@ app.use(jsonErrorHandler);
 app.use(errorHandler);
 
 if (require.main === module) {
-  app.listen(PORT, () =>
-    logger.info(`Grant API running on port ${PORT} in ${NODE_ENV} mode`)
-  );
+  app.listen(PORT, () => {
+    logger.info('Grant API started', {
+      port: PORT,
+      nodeEnv: NODE_ENV,
+    });
+  });
 }
 
 module.exports = app;

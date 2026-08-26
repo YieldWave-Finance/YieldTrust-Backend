@@ -1,14 +1,20 @@
-const pino = require('pino');
+function write(level, message, meta = {}) {
+  const entry = {
+    level,
+    message,
+    timestamp: new Date().toISOString(),
+    ...meta,
+  };
 
-const logger = pino({
-  level: process.env.LOG_LEVEL || 'info',
-  transport: process.env.NODE_ENV !== 'production'
-    ? { target: 'pino/file', options: { destination: 1 } }
-    : undefined,
-  formatters: {
-    level(label) { return { level: label }; },
-  },
-  timestamp: pino.stdTimeFunctions.isoTime,
-});
+  const line = JSON.stringify(entry);
+  if (level === 'error') {
+    console.error(line);
+    return;
+  }
+  console.log(line);
+}
 
-module.exports = logger;
+module.exports = {
+  info: (message, meta) => write('info', message, meta),
+  error: (message, meta) => write('error', message, meta),
+};
