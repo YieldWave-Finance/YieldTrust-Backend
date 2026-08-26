@@ -16,7 +16,11 @@ router.get('/', (req, res) => {
       count: escrows.length,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    errorResponse(res, {
+      status: 500,
+      message: error.message,
+      code: ERROR_CODES.INTERNAL_ERROR,
+    });
   }
 });
 
@@ -30,9 +34,10 @@ router.get('/:id', validateIdParam(), (req, res) => {
     const escrow = escrowService.getById(id);
 
     if (!escrow) {
-      return res.status(404).json({
-        success: false,
-        error: `Escrow with ID ${id} not found`,
+      return errorResponse(res, {
+        status: 404,
+        message: `Escrow with ID ${id} not found`,
+        code: ERROR_CODES.NOT_FOUND,
       });
     }
 
@@ -41,7 +46,11 @@ router.get('/:id', validateIdParam(), (req, res) => {
       data: escrow,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    errorResponse(res, {
+      status: 500,
+      message: error.message,
+      code: ERROR_CODES.INTERNAL_ERROR,
+    });
   }
 });
 
@@ -75,7 +84,11 @@ router.post(
       data: newEscrow,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    errorResponse(res, {
+      status: 500,
+      message: error.message,
+      code: ERROR_CODES.INTERNAL_ERROR,
+    });
   }
 });
 
@@ -100,9 +113,10 @@ router.put(
     const escrow = escrowService.getById(id);
 
     if (!escrow) {
-      return res.status(404).json({
-        success: false,
-        error: `Escrow with ID ${id} not found`,
+      return errorResponse(res, {
+        status: 404,
+        message: `Escrow with ID ${id} not found`,
+        code: ERROR_CODES.NOT_FOUND,
       });
     }
 
@@ -122,7 +136,11 @@ router.put(
       data: updatedEscrow,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    errorResponse(res, {
+      status: 500,
+      message: error.message,
+      code: ERROR_CODES.INTERNAL_ERROR,
+    });
   }
 });
 
@@ -136,9 +154,10 @@ router.delete('/:id', validateIdParam(), (req, res) => {
     const escrow = escrowService.getById(id);
 
     if (!escrow) {
-      return res.status(404).json({
-        success: false,
-        error: `Escrow with ID ${id} not found`,
+      return errorResponse(res, {
+        status: 404,
+        message: `Escrow with ID ${id} not found`,
+        code: ERROR_CODES.NOT_FOUND,
       });
     }
 
@@ -151,13 +170,18 @@ router.delete('/:id', validateIdParam(), (req, res) => {
         data: { id: parseInt(id, 10) },
       });
     } else {
-      res.status(500).json({
-        success: false,
-        error: 'Failed to delete escrow contract',
+      errorResponse(res, {
+        status: 500,
+        message: 'Failed to delete escrow contract',
+        code: ERROR_CODES.INTERNAL_ERROR,
       });
     }
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    errorResponse(res, {
+      status: 500,
+      message: error.message,
+      code: ERROR_CODES.INTERNAL_ERROR,
+    });
   }
 });
 

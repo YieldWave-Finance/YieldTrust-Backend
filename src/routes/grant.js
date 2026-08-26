@@ -33,7 +33,11 @@ router.get('/', validateQuery(['beneficiary', 'status']), (req, res) => {
       contract: 'CD6OGC46OFCV52IJQKEDVKLX5ASA3ZMSTHAAZQIPDSJV6VZ3KUJDEP4D',
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    errorResponse(res, {
+      status: 500,
+      message: error.message,
+      code: ERROR_CODES.INTERNAL_ERROR,
+    });
   }
 });
 
@@ -47,9 +51,10 @@ router.get('/:id', validateIdParam(), (req, res) => {
     const grant = grantService.getById(id);
 
     if (!grant) {
-      return res.status(404).json({
-        success: false,
-        error: `Grant with ID ${id} not found`,
+      return errorResponse(res, {
+        status: 404,
+        message: `Grant with ID ${id} not found`,
+        code: ERROR_CODES.NOT_FOUND,
       });
     }
 
@@ -58,7 +63,11 @@ router.get('/:id', validateIdParam(), (req, res) => {
       data: grant,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    errorResponse(res, {
+      status: 500,
+      message: error.message,
+      code: ERROR_CODES.INTERNAL_ERROR,
+    });
   }
 });
 
@@ -94,7 +103,11 @@ router.post(
       data: newGrant,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    errorResponse(res, {
+      status: 500,
+      message: error.message,
+      code: ERROR_CODES.INTERNAL_ERROR,
+    });
   }
 });
 
@@ -120,9 +133,10 @@ router.put(
     const grant = grantService.getById(id);
 
     if (!grant) {
-      return res.status(404).json({
-        success: false,
-        error: `Grant with ID ${id} not found`,
+      return errorResponse(res, {
+        status: 404,
+        message: `Grant with ID ${id} not found`,
+        code: ERROR_CODES.NOT_FOUND,
       });
     }
 
@@ -144,7 +158,11 @@ router.put(
       data: updatedGrant,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    errorResponse(res, {
+      status: 500,
+      message: error.message,
+      code: ERROR_CODES.INTERNAL_ERROR,
+    });
   }
 });
 
@@ -165,9 +183,10 @@ router.patch(
     const grant = grantService.getById(id);
 
     if (!grant) {
-      return res.status(404).json({
-        success: false,
-        error: `Grant with ID ${id} not found`,
+      return errorResponse(res, {
+        status: 404,
+        message: `Grant with ID ${id} not found`,
+        code: ERROR_CODES.NOT_FOUND,
       });
     }
 
@@ -179,7 +198,11 @@ router.patch(
       data: updatedGrant,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    errorResponse(res, {
+      status: 500,
+      message: error.message,
+      code: ERROR_CODES.INTERNAL_ERROR,
+    });
   }
 });
 
@@ -193,9 +216,10 @@ router.delete('/:id', validateIdParam(), (req, res) => {
     const grant = grantService.getById(id);
 
     if (!grant) {
-      return res.status(404).json({
-        success: false,
-        error: `Grant with ID ${id} not found`,
+      return errorResponse(res, {
+        status: 404,
+        message: `Grant with ID ${id} not found`,
+        code: ERROR_CODES.NOT_FOUND,
       });
     }
 
@@ -208,13 +232,18 @@ router.delete('/:id', validateIdParam(), (req, res) => {
         data: { id: parseInt(id, 10) },
       });
     } else {
-      res.status(500).json({
-        success: false,
-        error: 'Failed to delete grant',
+      errorResponse(res, {
+        status: 500,
+        message: 'Failed to delete grant',
+        code: ERROR_CODES.INTERNAL_ERROR,
       });
     }
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    errorResponse(res, {
+      status: 500,
+      message: error.message,
+      code: ERROR_CODES.INTERNAL_ERROR,
+    });
   }
 });
 
