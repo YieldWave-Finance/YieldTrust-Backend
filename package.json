@@ -7,7 +7,9 @@
     "start": "node index.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "jest --runInBand --forceExit --coverage"
+    "test": "jest --runInBand --forceExit --coverage",
+    "audit": "npm audit --omit=dev --audit-level=high",
+    "audit:all": "npm audit --audit-level=high"
   },
   "jest": {
     "testEnvironment": "node",
@@ -24,16 +26,14 @@
     }
   },
   "dependencies": {
-    "cors": "^2.8.6",
-    "dotenv": "^17.3.1",
-    "express": "^5.2.1",
-    "pino": "^10.3.1",
-    "pino-http": "^11.0.0"
+    "cors": "2.8.6",
+    "dotenv": "17.3.1",
+    "express": "5.2.1"
   },
   "devDependencies": {
-    "eslint": "^9.39.4",
-    "globals": "^16.5.0",
-    "jest": "^29.7.0",
-    "supertest": "^7.2.2"
+    "eslint": "9.39.4",
+    "globals": "16.5.0",
+    "jest": "29.7.0",
+    "supertest": "7.2.2"
   }
 }
