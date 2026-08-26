@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { grantService } = require('../services/dataStore');
+const { errorResponse, ERROR_CODES } = require('../utils/errorResponse');
 
 /**
  * GET /grant
@@ -30,7 +31,11 @@ router.get('/', (req, res) => {
       contract: 'CD6OGC46OFCV52IJQKEDVKLX5ASA3ZMSTHAAZQIPDSJV6VZ3KUJDEP4D',
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    errorResponse(res, {
+      status: 500,
+      message: error.message,
+      code: ERROR_CODES.INTERNAL_ERROR,
+    });
   }
 });
 
@@ -44,9 +49,10 @@ router.get('/:id', (req, res) => {
     const grant = grantService.getById(id);
 
     if (!grant) {
-      return res.status(404).json({
-        success: false,
-        error: `Grant with ID ${id} not found`,
+      return errorResponse(res, {
+        status: 404,
+        message: `Grant with ID ${id} not found`,
+        code: ERROR_CODES.NOT_FOUND,
       });
     }
 
@@ -55,7 +61,11 @@ router.get('/:id', (req, res) => {
       data: grant,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    errorResponse(res, {
+      status: 500,
+      message: error.message,
+      code: ERROR_CODES.INTERNAL_ERROR,
+    });
   }
 });
 
@@ -70,16 +80,18 @@ router.post('/', (req, res) => {
 
     // Validation
     if (!name || !amount || !currency || !beneficiary) {
-      return res.status(400).json({
-        success: false,
-        error: 'name, amount, currency, and beneficiary are required',
+      return errorResponse(res, {
+        status: 400,
+        message: 'name, amount, currency, and beneficiary are required',
+        code: ERROR_CODES.VALIDATION_ERROR,
       });
     }
 
     if (typeof amount !== 'number' || amount <= 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'amount must be a positive number',
+      return errorResponse(res, {
+        status: 400,
+        message: 'amount must be a positive number',
+        code: ERROR_CODES.VALIDATION_ERROR,
       });
     }
 
@@ -97,7 +109,11 @@ router.post('/', (req, res) => {
       data: newGrant,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    errorResponse(res, {
+      status: 500,
+      message: error.message,
+      code: ERROR_CODES.INTERNAL_ERROR,
+    });
   }
 });
 
@@ -112,9 +128,10 @@ router.put('/:id', (req, res) => {
     const grant = grantService.getById(id);
 
     if (!grant) {
-      return res.status(404).json({
-        success: false,
-        error: `Grant with ID ${id} not found`,
+      return errorResponse(res, {
+        status: 404,
+        message: `Grant with ID ${id} not found`,
+        code: ERROR_CODES.NOT_FOUND,
       });
     }
 
@@ -124,9 +141,10 @@ router.put('/:id', (req, res) => {
     // Validate amount if provided
     if (amount !== undefined) {
       if (typeof amount !== 'number' || amount <= 0) {
-        return res.status(400).json({
-          success: false,
-          error: 'amount must be a positive number',
+        return errorResponse(res, {
+          status: 400,
+          message: 'amount must be a positive number',
+          code: ERROR_CODES.VALIDATION_ERROR,
         });
       }
     }
@@ -146,7 +164,11 @@ router.put('/:id', (req, res) => {
       data: updatedGrant,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    errorResponse(res, {
+      status: 500,
+      message: error.message,
+      code: ERROR_CODES.INTERNAL_ERROR,
+    });
   }
 });
 
@@ -161,26 +183,29 @@ router.patch('/:id/status', (req, res) => {
     const { status } = req.body;
 
     if (!status) {
-      return res.status(400).json({
-        success: false,
-        error: 'status is required',
+      return errorResponse(res, {
+        status: 400,
+        message: 'status is required',
+        code: ERROR_CODES.VALIDATION_ERROR,
       });
     }
 
     const validStatuses = ['pending', 'approved', 'disbursed', 'rejected'];
     if (!validStatuses.includes(status)) {
-      return res.status(400).json({
-        success: false,
-        error: `status must be one of: ${validStatuses.join(', ')}`,
+      return errorResponse(res, {
+        status: 400,
+        message: `status must be one of: ${validStatuses.join(', ')}`,
+        code: ERROR_CODES.VALIDATION_ERROR,
       });
     }
 
     const grant = grantService.getById(id);
 
     if (!grant) {
-      return res.status(404).json({
-        success: false,
-        error: `Grant with ID ${id} not found`,
+      return errorResponse(res, {
+        status: 404,
+        message: `Grant with ID ${id} not found`,
+        code: ERROR_CODES.NOT_FOUND,
       });
     }
 
@@ -192,7 +217,11 @@ router.patch('/:id/status', (req, res) => {
       data: updatedGrant,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    errorResponse(res, {
+      status: 500,
+      message: error.message,
+      code: ERROR_CODES.INTERNAL_ERROR,
+    });
   }
 });
 
@@ -206,9 +235,10 @@ router.delete('/:id', (req, res) => {
     const grant = grantService.getById(id);
 
     if (!grant) {
-      return res.status(404).json({
-        success: false,
-        error: `Grant with ID ${id} not found`,
+      return errorResponse(res, {
+        status: 404,
+        message: `Grant with ID ${id} not found`,
+        code: ERROR_CODES.NOT_FOUND,
       });
     }
 
@@ -221,13 +251,18 @@ router.delete('/:id', (req, res) => {
         data: { id: parseInt(id, 10) },
       });
     } else {
-      res.status(500).json({
-        success: false,
-        error: 'Failed to delete grant',
+      errorResponse(res, {
+        status: 500,
+        message: 'Failed to delete grant',
+        code: ERROR_CODES.INTERNAL_ERROR,
       });
     }
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    errorResponse(res, {
+      status: 500,
+      message: error.message,
+      code: ERROR_CODES.INTERNAL_ERROR,
+    });
   }
 });
 

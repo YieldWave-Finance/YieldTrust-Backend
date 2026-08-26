@@ -13,6 +13,7 @@ const {
 const { rateLimit } = require('./src/middleware/rateLimiter');
 const routes = require('./src/routes');
 const errorHandler = require('./src/middleware/errorHandler');
+const { errorResponse, ERROR_CODES } = require('./src/utils/errorResponse');
 
 const app = express();
 
@@ -39,6 +40,15 @@ app.get('/', (req, res) => {
 
 app.use('/', routes);
 
+// --- 404 catch-all for unknown routes ---
+app.use((req, res) => {
+  errorResponse(res, {
+    status: 404,
+    message: `Route ${req.method} ${req.originalUrl} not found`,
+    code: ERROR_CODES.NOT_FOUND,
+  });
+});
+
 // --- Error handling (must come last) ---
 // JSON parser errors first (413/400), then the generic handler for the rest.
 app.use(jsonErrorHandler);
@@ -50,4 +60,4 @@ if (require.main === module) {
   );
 }
 
-module.exports = app; // export for testing
+module.exports = app;
