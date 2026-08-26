@@ -11,8 +11,10 @@ const {
   jsonErrorHandler
 } = require('./src/middleware/jsonSecurity');
 const { rateLimit } = require('./src/middleware/rateLimiter');
+const { authenticate } = require('./src/middleware/auth');
 const routes = require('./src/routes');
 const errorHandler = require('./src/middleware/errorHandler');
+const logger = require('./src/utils/logger');
 
 const app = express();
 
@@ -20,13 +22,12 @@ const PORT = parseInt(process.env.PORT, 10) || 3000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
 // --- Core middleware ---
-// Hardened JSON parsing: 10kb limit, strict mode, prototype-pollution guard.
-// Every route declared after this gets the hardening automatically.
+app.use(requestLogger);
 app.use(jsonBodyParser, sanitizeJsonBody);
-
-// Rate limiting: protects all routes from abuse.
-// Configure via RATE_LIMIT_WINDOW_MS and RATE_LIMIT_MAX env vars.
 app.use(rateLimit());
+
+// Public reads stay open; mutating routes require an API key or bearer token.
+app.use(authenticate);
 
 // --- Routes ---
 app.get('/', (req, res) => {
@@ -38,6 +39,15 @@ app.get('/', (req, res) => {
 });
 
 app.use('/', routes);
+
+// --- 404 catch-all for unknown routes ---
+app.use((req, res) => {
+  errorResponse(res, {
+    status: 404,
+    message: `Route ${req.method} ${req.originalUrl} not found`,
+    code: ERROR_CODES.NOT_FOUND,
+  });
+});
 
 // --- Error handling (must come last) ---
 app.use((req, res) => {
@@ -58,9 +68,12 @@ app.use(jsonErrorHandler);
 app.use(errorHandler);
 
 if (require.main === module) {
-  app.listen(PORT, () =>
-    console.log(`Grant API running on port ${PORT} in ${NODE_ENV} mode`)
-  );
+  app.listen(PORT, () => {
+    logger.info('Grant API started', {
+      port: PORT,
+      nodeEnv: NODE_ENV,
+    });
+  });
 }
 
-module.exports = app; // export for testing
+module.exports = app;

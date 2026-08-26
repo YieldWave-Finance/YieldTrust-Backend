@@ -18,10 +18,30 @@ describe('Authentication Middleware', () => {
     expect(res.statusCode).toBe(200);
   });
 
+  it('allows GET /escrow/:id without auth', async () => {
+    const res = await request(app).get('/escrow/1');
+    expect(res.statusCode).not.toBe(401);
+  });
+
   it('rejects POST without auth', async () => {
     const res = await request(app).post('/escrow').send({});
     expect(res.statusCode).toBe(401);
     expect(res.body).toHaveProperty('error');
+  });
+
+  it('rejects PUT without auth', async () => {
+    const res = await request(app).put('/escrow/1').send({ status: 'funded' });
+    expect(res.statusCode).toBe(401);
+  });
+
+  it('rejects PATCH without auth', async () => {
+    const res = await request(app).patch('/grant/1/status').send({ status: 'approved' });
+    expect(res.statusCode).toBe(401);
+  });
+
+  it('rejects DELETE without auth', async () => {
+    const res = await request(app).delete('/escrow/1');
+    expect(res.statusCode).toBe(401);
   });
 
   it('accepts POST with valid API key', async () => {
