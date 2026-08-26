@@ -1,13 +1,11 @@
-/**
- * Central error-handling middleware.
- * Must be registered AFTER all routes in Express (4-argument signature).
- */
-// next is required for Express's 4-arg error handler signature
+const { errorResponse } = require('../utils/errorResponse');
+
 function errorHandler(err, req, res, next) {
   const status = err.status || err.statusCode || 500;
   const message = err.message || 'Internal Server Error';
+  const code = err.code || 'INTERNAL_ERROR';
 
-  res.status(status).json({ error: message });
+  errorResponse(res, { status, message, code });
 }
 
 module.exports = errorHandler;
