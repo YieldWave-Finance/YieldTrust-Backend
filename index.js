@@ -50,6 +50,20 @@ app.use((req, res) => {
 });
 
 // --- Error handling (must come last) ---
+app.use((req, res) => {
+  res.status(404).json({
+    error: {
+      message: 'Route not found',
+      code: 'NOT_FOUND',
+      details: {
+        method: req.method,
+        path: req.originalUrl,
+      },
+    },
+  });
+});
+
+// JSON parser errors first (413/400), then the generic handler for the rest.
 app.use(jsonErrorHandler);
 app.use(errorHandler);
 
