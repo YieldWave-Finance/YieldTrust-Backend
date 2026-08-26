@@ -11,7 +11,7 @@ const {
   jsonErrorHandler
 } = require('./src/middleware/jsonSecurity');
 const { rateLimit } = require('./src/middleware/rateLimiter');
-const requestLogger = require('./src/middleware/requestLogger');
+const { authenticate } = require('./src/middleware/auth');
 const routes = require('./src/routes');
 const errorHandler = require('./src/middleware/errorHandler');
 const logger = require('./src/utils/logger');
@@ -26,6 +26,9 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 app.use(requestLogger);
 app.use(jsonBodyParser, sanitizeJsonBody);
 app.use(rateLimit());
+
+// Public reads stay open; mutating routes require an API key or bearer token.
+app.use(authenticate);
 
 // --- Routes ---
 app.get('/', (req, res) => {

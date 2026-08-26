@@ -5,7 +5,7 @@
  * 1. API Key — via x-api-key header
  * 2. Bearer token — via Authorization: Bearer <token> header
  *
- * Public routes (GET /, GET /escrow, GET /grant) are accessible without auth.
+ * Public reads (GET routes) are accessible without auth.
  * Mutating routes (POST, PUT, DELETE, PATCH) require authentication.
  */
 
@@ -22,8 +22,8 @@ const API_KEY = process.env.API_KEY || crypto.randomBytes(32).toString('hex');
  * Sets req.authenticated = true and req.authMethod on success.
  */
 function authenticate(req, res, next) {
-  // Skip auth for GET requests to public read endpoints
-  if (req.method === 'GET' && (req.path === '/' || req.path === '/escrow' || req.path === '/grant' || req.path === '/escrow/' || req.path === '/grant/')) {
+  // Skip auth for public read endpoints.
+  if (req.method === 'GET') {
     req.authenticated = false;
     return next();
   }
